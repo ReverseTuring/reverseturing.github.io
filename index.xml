@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reverse Turing</title>
+    <link>https://reverseturing.github.io/</link>
+    <description>Recent content on Reverse Turing</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>fi</language>
+    <lastBuildDate>Wed, 06 Mar 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://reverseturing.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Minimivarianssiportfolio Seligsonin rahastoilla</title>
+      <link>https://reverseturing.github.io/2019/03/06/minimivarianssiportfolio-seligsonin-rahastoilla/</link>
+      <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://reverseturing.github.io/2019/03/06/minimivarianssiportfolio-seligsonin-rahastoilla/</guid>
+      <description>Bloggerissa on ovelasti nimetty blogi Astro-hamppi 3000 joka harmillisesti ei ole päivittynyt aikoihin. Aivan kuin kirjoittaja olisi ollut aloittaessaan opiskelija ja valmistuttuaan sekä työelämään siirryttyään lopettanut pseudonyymillä kirjoittamisen.
+Harmillista, mutta onneksi blogi on edelleen luettavissa.
+Yksi parhaista teksteistä käsittelee Helsingin pörssin minimivarianssisalkun tuottoa. Tai oikeastaan aiheena on sektorirotaatio S&amp;amp;P 500 Sector SPRD -ETF:llä, mutta niiden painot valitaan ratkaisemalla minimivarianssiportfolio.
+Kirjoituksen aikoihin suomalaisten piensijoittajien oli vielä mahdollista sijoittaa suoraan amerikkalaisiin ETF:iin, mutta Mifid 2:n myötä tämä ei enää läheskään aina onnistu.</description>
+    </item>
+    
+    <item>
+      <title>Blogin tarkoitus</title>
+      <link>https://reverseturing.github.io/blogin-tarkoitus/</link>
+      <pubDate>Mon, 25 Feb 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://reverseturing.github.io/blogin-tarkoitus/</guid>
+      <description>Aloitin tämän blogin alunperin Bloggerissa kirjoittaakseni juttuja ruoanlaitosta, ohjelmoinnista, matematiikasta ja yleensä homonörttihommista.
+Sittemmin siirsin blogin GitHubiin koska on helpompaa kirjoittaa koodaamisesta ja matematiikasta Hugolla ja blogdownilla.
+Tiivistetympää shitpostaustailmaisua harrastan Mastodon-instanssilla scholar.social. Alla sinne kirjoittamani esittely.
+ Tavoitteenani on joskus tulevaisuudessa olla vegaani data-assimilaation asiantuntija. Toistaiseksi olen pääasiassa vegetaristi mutta syön satunnaisesti lihaa.
+Tekijänoikeudet Logon on tehnyt Smashicons ja se on julkaistu sivustolla www.flaticon.com lisenssillä CC 3.0 BY.
+Tämän blogin muu sisältö on lisensoitu Creative Commons Nimeä-JaaSamoin 4.</description>
+    </item>
+    
+  </channel>
+</rss>

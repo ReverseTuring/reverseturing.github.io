@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Reverse Turing</title>
+    <link>https://reverseturing.github.io/post/</link>
+    <description>Recent content in Posts on Reverse Turing</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>fi</language>
+    <lastBuildDate>Wed, 06 Mar 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://reverseturing.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Minimivarianssiportfolio Seligsonin rahastoilla</title>
+      <link>https://reverseturing.github.io/2019/03/06/minimivarianssiportfolio-seligsonin-rahastoilla/</link>
+      <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://reverseturing.github.io/2019/03/06/minimivarianssiportfolio-seligsonin-rahastoilla/</guid>
+      <description>Bloggerissa on ovelasti nimetty blogi Astro-hamppi 3000 joka harmillisesti ei ole päivittynyt aikoihin. Aivan kuin kirjoittaja olisi ollut aloittaessaan opiskelija ja valmistuttuaan sekä työelämään siirryttyään lopettanut pseudonyymillä kirjoittamisen.
+Harmillista, mutta onneksi blogi on edelleen luettavissa.
+Yksi parhaista teksteistä käsittelee Helsingin pörssin minimivarianssisalkun tuottoa. Tai oikeastaan aiheena on sektorirotaatio S&amp;amp;P 500 Sector SPRD -ETF:llä, mutta niiden painot valitaan ratkaisemalla minimivarianssiportfolio.
+Kirjoituksen aikoihin suomalaisten piensijoittajien oli vielä mahdollista sijoittaa suoraan amerikkalaisiin ETF:iin, mutta Mifid 2:n myötä tämä ei enää läheskään aina onnistu.</description>
+    </item>
+    
+  </channel>
+</rss>

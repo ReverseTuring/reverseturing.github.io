@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.55.6" />
+
+
+<title>Minimivarianssiportfolio Seligsonin rahastoilla - Reverse Turing</title>
+<meta property="og:title" content="Minimivarianssiportfolio Seligsonin rahastoilla - Reverse Turing">
+
+
+  <link href='https://reverseturing.github.io/favicon.ico' rel='icon' type='image/x-icon'/>
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+<link rel="stylesheet" href="/css/custom.css">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/turing-test.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/blogin-tarkoitus/">Blogin tarkoitus</a></li>
+    
+    <li><a href="https://github.com/ReverseTuring">GitHub</a></li>
+    
+    <li><a href="https://scholar.social/@ReverseTuring">Mastodon</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+  	
+
+    <h1 class="article-title">Minimivarianssiportfolio Seligsonin rahastoilla</h1>
+
+    
+    <span class="article-date">2019-03-06</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>Bloggerissa on ovelasti nimetty blogi <a href="https://astrohamppi3000.blogspot.com/">Astro-hamppi 3000</a> joka harmillisesti ei ole päivittynyt aikoihin. Aivan kuin kirjoittaja olisi ollut aloittaessaan opiskelija ja valmistuttuaan sekä työelämään siirryttyään lopettanut pseudonyymillä kirjoittamisen.</p>
+<p>Harmillista, mutta onneksi blogi on edelleen luettavissa.</p>
+<p>Yksi parhaista teksteistä käsittelee <a href="https://astrohamppi3000.blogspot.com/2013/12/helsingin-porssin-minimivarianssisalkun.html">Helsingin pörssin minimivarianssisalkun tuottoa</a>. Tai oikeastaan aiheena on sektorirotaatio S&amp;P 500 Sector SPRD -ETF:llä, mutta niiden painot valitaan ratkaisemalla minimivarianssiportfolio.</p>
+<p>Kirjoituksen aikoihin suomalaisten piensijoittajien oli vielä mahdollista sijoittaa suoraan amerikkalaisiin ETF:iin, mutta Mifid 2:n myötä tämä ei enää läheskään aina onnistu. Rahastoista sinänsä ei ole pulaa, pikemmin päinvastoin sillä erilaisia rahastoja on enemmän tarjolla kuin Helsingin pörssissä on listattuja osakkeita.</p>
+<p>Kiinnostavaa olisi testata miten sektorirotaatio toimisi soveltamalla minimivarianssiportfoliota <a href="https://www.seligson.fi/sco/suomi/rahastot/rahastojen-arvojen-historia/">Seligsonin rahastoihin</a>. Tällaisen strategian testaaminen on melko helppoa koska kyseinen firma tarjoaa rahastojensa historialliset arvot kenen hyvänsä ladattaviksi. Muutoin tämä kirjoitus ei ole mainos eikä myöskään suositus sijoittaa heidän rahastoihin.</p>
+<p>Ensiksi pitää ladata hintadata. Tämä onnistuu vaikkapa <a href="/code/seligson.R">seuraavalla R-koodilla</a>:</p>
+<pre class="r"><code>library(dplyr)
+library(readr)
+library(rvest)
+
+html &lt;- read_html(&#39;https://www.seligson.fi/sco/suomi/rahastot/rahastojen-arvojen-historia/&#39;)
+
+hrefs &lt;- html_nodes(html, &#39;a&#39;) %&gt;% html_attr(&#39;href&#39;)
+
+csvs &lt;- hrefs[grepl(&#39;\\.csv$&#39;, hrefs)]
+
+download &lt;- function(url) {
+  prc &lt;- read_delim(url,
+                    locale = locale(date_format = &#39;%d.%m.%Y&#39;, decimal_mark = &#39;,&#39;),
+                    col_names = c(&#39;date&#39;, &#39;prc&#39;),
+                    col_types = cols(date = col_date(), prc = col_double()),
+                    delim = &#39;;&#39;) %&gt;%
+    mutate(fund = tools::file_path_sans_ext(basename(url)))
+  prc
+}
+
+prices &lt;- bind_rows(lapply(csvs, download))
+
+dir.create(&#39;static/data&#39;, showWarnings = FALSE, recursive = TRUE)
+
+write_rds(prices, &#39;static/data/seligson.rds&#39;)</code></pre>
+<p>Koodi lataa hinta-aikasarjat R-kielenkäytössä <em>long format</em> -dataframeen. Sarake <code>date</code> on hinnan päivämäärä, <code>prc</code> hinta euroina ja <code>fund</code> on rahaston nimi.</p>
+<p>Tähän analyysiin käytetyn datan voi ladata <a href="/data/seligson.rds">tästä</a> R-formaatissa.</p>
+<p>Ennen analysointia lienee paikallaan kerrata mitä minimivarianssiportfolio tarkoittaa. Oletataan, että meillä on tuottoaikasarjat <span class="math inline">\(N\)</span>:lle osakkeelle matriisissa <span class="math inline">\(T \times N\)</span>-matriisissa <span class="math inline">\(R\)</span> ja osakkeiden painot portfoliossa ovat vektori <span class="math inline">\(w\)</span> siten, että <span class="math inline">\(\sum_{i=1}^{N} w_i=1\)</span>. Tällöin portfolion varianssi on <span class="math inline">\(w^\prime V w\)</span>, missä <span class="math inline">\(V\)</span> on osakkeiden tuottojen kovarianssimatriisi.</p>
+<p>Minimivarianssiportfolion (MV) painot ratkaistaan minimoimalla portfolion varianssi budjettirajoite huomioiden. Lisäksi, koska datan rahastoja ei voi myydä lyhyeksi, on myös rajoituttava ratkaisuun missä painot ovat positiivisia. R:llä tämän tyylisten optimointitehtävien numeerinen ratkaiseminen on helpointa <code>nloptr</code>-paketilla.</p>
+<p>Formaalimmin on ratkaistava tehtävä
+<span class="math display">\[
+w_{MV} = \text{arg min} \; w^\prime V w
+\]</span>
+siten, että
+<span class="math display">\[
+\sum_{i=1}^{N} w_i=1
+\]</span>
+ja
+<span class="math display">\[
+0 \le w_i \le 1 \qquad i = 1, \ldots, N.
+\]</span></p>
+<p>Simulaatiossa on ehkä kiinnostavampaa testata, minkälainen tuotto minimivarianssistrategialla saavutetaan, jos sitä sovelletaan pidemmän aikaa salkku kerran kuussa uudelleen painottaen. Käytännössä valitaan sopiva otoksen pituus, vaikkapa 36 kuukautta eli kolme vuotta, estimoidaan siitä kovarianssimatriisi ja ratkaistaan salkun painot seuraavan kuun ajaksi sekä lasketaan salkun tuotto. Tätä prosessia jatketaan kunnes päästään datan loppuun.</p>
+<p>Strategiaa voi verrata esimerkiksi yksinkertaista tasapainotettua salkkua (EW) vastaan, missä kukin osake saa saman painon, toisin sanoen
+<span class="math display">\[
+w_{EW,i} = 1/N \qquad i=1,\ldots, N.
+\]</span></p>
+<p>Toinen tapa toteuttaa pienen varianssin tai volatiliteetin strategia on skaalata osakkeiden painoja niiden varianssien tai volatiliteettien käänteisluvulla (IV):
+<span class="math display">\[
+w_{IV,i} = \frac{1/\sigma_i}{\sum_{j=1}^N 1/\sigma_j}, \qquad i=1,\ldots,N.
+\]</span></p>
+<p>Tämä on helpompi, koska yksittäisen osakkeen varianssin voi estimoida eripituisista aikasarjoista ja ei myöskään tarvitse ratkaista optimointitehtävää.</p>
+<p>Katsotaanpa seuraavaksi dataa. Osa rahastoista on aloitettu melko hiljattain, mutta pitkäikäisimmät jo 90-luvun puolella.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Rahasto</th>
+<th align="left">Aloituspäivä</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">rahamarkkina_exc</td>
+<td align="left">1998-04-01</td>
+</tr>
+<tr class="even">
+<td align="left">suomi_exc</td>
+<td align="left">1998-04-01</td>
+</tr>
+<tr class="odd">
+<td align="left">eurooppa_exc</td>
+<td align="left">1998-06-15</td>
+</tr>
+<tr class="even">
+<td align="left">global-brands_exc</td>
+<td align="left">1998-06-18</td>
+</tr>
+<tr class="odd">
+<td align="left">euroobligaatio_exc</td>
+<td align="left">1998-10-14</td>
+</tr>
+<tr class="even">
+<td align="left">pharos_exc</td>
+<td align="left">1999-11-24</td>
+</tr>
+<tr class="odd">
+<td align="left">aasia_exc</td>
+<td align="left">1999-12-29</td>
+</tr>
+<tr class="even">
+<td align="left">global-pharma_exc</td>
+<td align="left">2000-01-17</td>
+</tr>
+<tr class="odd">
+<td align="left">russia_exc</td>
+<td align="left">2000-03-08</td>
+</tr>
+<tr class="even">
+<td align="left">phoenix_exc</td>
+<td align="left">2000-09-25</td>
+</tr>
+<tr class="odd">
+<td align="left">eurocorporate_exc</td>
+<td align="left">2001-09-14</td>
+</tr>
+<tr class="even">
+<td align="left">phoebus_exc</td>
+<td align="left">2001-10-10</td>
+</tr>
+<tr class="odd">
+<td align="left">omxh25_exc</td>
+<td align="left">2002-02-08</td>
+</tr>
+<tr class="even">
+<td align="left">russiak_exc</td>
+<td align="left">2004-11-22</td>
+</tr>
+<tr class="odd">
+<td align="left">pohjoisamerikka_exc</td>
+<td align="left">2006-12-29</td>
+</tr>
+<tr class="even">
+<td align="left">kehittyva_exc</td>
+<td align="left">2010-09-03</td>
+</tr>
+<tr class="odd">
+<td align="left">latam_exc</td>
+<td align="left">2016-05-12</td>
+</tr>
+</tbody>
+</table>
+<p>Tässä kuvassa on Suomi- ja rahamarkkinarahastojen hintojen koko historia:</p>
+<p><img src="/post/2019-03-06-minimivarianssiportfolio-seligsonin-rahastoilla_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Rahamarkkinarahasto ei ole kovin kiinnostava sijoituskohde. Käytännössä sen sijoitukset ovat erilaisia lyhyitä talletuksia, joten tuotto on hyvin samankaltainen tavallisen talletustilin kanssa. Otetaanpa sen sijaan salkkuun malliksi Suomi-, Eurooppa-, Global Brands- ja Euro-obligaatiorahastot. Näin saadaan altistus sekä osake- että valtionvelkakirjariskeille.</p>
+<p>Seuraava kuva esittää minimivarianssiportfolion (MV) painot testausperiodin aikana.</p>
+<p><img src="/post/2019-03-06-minimivarianssiportfolio-seligsonin-rahastoilla_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Strategia painottaa vahvasti obligaatioita, koska niillä on matala korrelaatio osakerahastojen kanssa. Oletettavasti portfolion tuotto jää tällöin osakerahastoja matalammaksi, mutta sentään varianssi minimoituu.</p>
+<p>Katsotaanpa myös yksinkertaisempaa strategiaa missä painot skaalataan rahastojen volatiliteeteilla (IV).</p>
+<p><img src="/post/2019-03-06-minimivarianssiportfolio-seligsonin-rahastoilla_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Tämäkin strategia pitää velkakirjapainon suurena, mutta osakeriskiä otetaan huomattavasti enemmän.</p>
+<p>Tasapainotetussa salkussa (EW) kaikkien rahastojen paino on sama 25%.</p>
+<p>Viimeinen kuva esittää strategioiden kumulatiiviset tuotot testausperiodillla.</p>
+<p><img src="/post/2019-03-06-minimivarianssiportfolio-seligsonin-rahastoilla_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Tasapainotettu salkku päihittää helposti varianssin minimointiin tähtäävät strategiat, mutta paikoin (esimerkiksi viime finanssikriisin aikoihin) kyyti olisi ollut sijoittajalle kylmää. Kaksi muuta strategiaa surffivat kriisin yli melko vähällä volatiliteetilla. Ehkäpä ne sopivat paremmin sijoittajalle, joka ei siedä suurta salkun arvon heiluntaa.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Strategia</th>
+<th align="right">Keskituotto</th>
+<th align="right">Volatiliteetti</th>
+<th align="right">Arvo lopussa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">EW</td>
+<td align="right">7.02</td>
+<td align="right">10.86</td>
+<td align="right">3.06</td>
+</tr>
+<tr class="even">
+<td align="left">IV</td>
+<td align="right">5.95</td>
+<td align="right">6.00</td>
+<td align="right">2.73</td>
+</tr>
+<tr class="odd">
+<td align="left">MV</td>
+<td align="right">4.46</td>
+<td align="right">3.69</td>
+<td align="right">2.15</td>
+</tr>
+</tbody>
+</table>
+<p>Annualisoituja lukuja katsoen on jälkikäteen on toki helppo viisastella, että vajaat 20 vuotta markkinoilla mukana olleen varallisuus on kolminkertaistunut osakeriskiä sietämällä, kun taas varianssi minimoivan vain hieman yli kaksinkertaistunut. Yllättäen yksinkertaisempikin IV-strategia pärjää hyvin vaikka volatiliteetti on huomattavasti tasapainotettua salkkua matalampi.</p>
+<p>Tämän tyylisissä analyyseissä on se huono puoli, että tulokset ovat herkkiä käytetylle datalle, erityisesti mille periodille se sijoittuu ja mistä salkun tuoton simulointi alkaa. Lisäksi analyysi ei ota huomioon kaupankäyntikuluja tai veroja, ja myöskin olettaa että kaikki lunastukset ja myynnit voidaan toteuttaa kuun viimeisen kaupankäyntipäivän hinnoin. Todellisuudessa toimeksiannoissa on 2-3 päivän viive.</p>
+<p>Analyysikoodit saa halutessaan ladattua <a href="/code/minimivarianssiportfolio.R">tästä</a>.</p>
+
+    </div>
+  </article>
+
+  
+<section id="comments">
+  <div id="disqus_thread"></div>
+  <script>
+  var disqus_config = function () {
+  
+  };
+  (function() {
+    var inIFrame = function() {
+      var iframe = true;
+      try { iframe = window.self !== window.top; } catch (e) {}
+      return iframe;
+    };
+    if (inIFrame()) return;
+    var d = document, s = d.createElement('script');
+    s.src = '//reverseturing.disqus.com/embed.js'; s.async = true;
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</section>
+
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS-syöte</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Tehty <img src="/images/hugo-logo.png" alt="Hugo" width="22" height="22">:lla</a>
+          </li>
+          <li>
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+    
+  </body>
+</html>
+
